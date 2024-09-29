@@ -64,3 +64,84 @@ plt.show()
 ![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/Figure_1.png)
 ![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/Figure_2.png)
 
+# 2 Создать программу, которая рисует окружность с заданным пользователем радиусом
+```
+import matplotlib.pyplot as plt
+import math
+
+# Обычное построение окружности
+def common_circle(radius):
+    theta = [i for i in range(361)]  # Углы в градусах (от 0 до 360)
+    x_vals = [radius * math.cos(math.radians(t)) for t in theta]  # Вычисляем координаты x
+    y_vals = [radius * math.sin(math.radians(t)) for t in theta]  # Вычисляем координаты y
+
+    plt.plot(x_vals, y_vals, linestyle='-', color='b')  # Рисуем окружность
+    plt.gca().set_aspect('equal', adjustable='box')  # Соотношение осей 1:1
+    plt.title("Окружность обычным алгоритмом")
+    plt.grid(True)
+    plt.savefig('Krug_common'+str(radius)+'.png')
+    plt.show()
+    
+# Алгоритм Брезенхема для окружности
+def bresenham_circle(radius):
+    points = []
+    x = 0
+    y = radius
+    d = 3 - 2 * radius
+
+    def plot_circle_points(x_center, y_center, x, y):
+        points.extend([(x_center + x, y_center + y), (x_center - x, y_center + y),
+                       (x_center + x, y_center - y), (x_center - x, y_center - y),
+                       (x_center + y, y_center + x), (x_center - y, y_center + x),
+                       (x_center + y, y_center - x), (x_center - y, y_center - x)])
+
+    x_center, y_center = 0, 0  # Центр окружности в (0,0)
+    plot_circle_points(x_center, y_center, x, y)
+
+    while y >= x:
+        x += 1
+        if d > 0:
+            y -= 1
+            d = d + 4 * (x - y) + 10
+        else:
+            d = d + 4 * x + 6
+        plot_circle_points(x_center, y_center, x, y)
+
+    return points
+
+# Ввод радиуса от пользователя
+radius = int(input("Введите радиус окружности: "))
+
+# Обычный алгоритм рисования окружности
+common_circle(radius)
+
+# Алгоритм Брезенхема для рисования окружности
+circle_points = bresenham_circle(radius)
+
+# Разделяем точки на координаты X и Y для визуализации
+x_coords, y_coords = zip(*circle_points)
+
+plt.scatter(x_coords, y_coords, color='r')  # Рисуем окружность по алгоритму Брезенхема
+plt.gca().set_aspect('equal', adjustable='box')  # Соотношение осей 1:1
+plt.title("Окружность по алгоритму Брезенхема")
+plt.grid(True)
+plt.savefig('Krug_6pezen'+str(radius)+'.png')
+plt.show()
+```
+
+> Ситуация, что была с прямой, при постройке окружности не поменялась. При маленьком радиусе,  **R=5**, видны точки постройки фигуры.
+
+
+
+![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/Krug_6pezen5.png)
+![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/Krug_common5.png)
+
+
+>  При **R=300**, точность повышается
+
+
+
+![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/Krug_6pezen300.png)
+![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/Krug_common300.png)
+
+> Весьма занятно, построение окружности обычной функцией будет занимать 0.22 секунды при **R∈(10, 10000000)**. Брезенхемом потребовалось *10 минут* на обрабатку **R=10000000** 
