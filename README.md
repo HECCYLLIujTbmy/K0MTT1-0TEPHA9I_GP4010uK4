@@ -252,3 +252,183 @@ visualize_multiple_lines(x_min, y_min, x_max, y_max, lines)
 
 ```
 ![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/алгорит-%20Сазерленда-Коэна.png)
+
+# Task  - Сравнение производительности алгоритма заполнения многоугольников с затравкой и метода из библиотеки pygame
+> Прихожу к выводу, что создавать велосипед в таких вопросах не следует. Способы из библиотек весьма хорошо оптимизированы, в то время как созданный руками код будет иметь множество изьянов. Когда pygame позволяет весьма быстро заполнить большие фигуры на любом железе, стандартная реализация затравки на фоне выглядит как что то страшное по времени.
+> **Условие общее: 5 углов и 100 радиус. Pygame 0.067, Common func 0.684**
+
+```
+#pygame
+import pygame
+import numpy as np
+import sys
+import time
+
+def create_regular_polygon(num_sides, radius, center):
+    """
+    Создание правильного многоугольника по количеству углов и радиусу.
+    """
+    angle = 2 * np.pi / num_sides  # Угол между вершинами
+    vertices = [(int(center[0] + radius * np.cos(i * angle)),
+                 int(center[1] + radius * np.sin(i * angle))) for i in range(num_sides)]
+    return vertices
+
+def boundary_fill(screen, x, y, fill_color):
+    width, height = screen.get_size()
+    background_color = screen.get_at((x, y))
+    
+    if background_color != (255, 255, 255):  # Проверяем, что не закрашиваем уже закрашенный пиксель
+        return
+    
+    stack = [(x, y)]
+
+    while stack:
+        cx, cy = stack.pop()
+        
+        if cx < 0 or cx >= width or cy < 0 or cy >= height:
+            continue
+        
+        current_color = screen.get_at((cx, cy))
+        
+        if current_color == background_color:
+            screen.set_at((cx, cy), fill_color)
+
+            # Проверяем соседние пиксели
+            stack.append((cx - 1, cy))
+            stack.append((cx + 1, cy))
+            stack.append((cx, cy - 1))
+            stack.append((cx, cy + 1))
+
+def main():
+    pygame.init()
+    width, height = 400, 400
+    screen = pygame.display.set_mode((width, height))
+    pygame.display.set_caption("Заполнение многоугольника")
+
+    #количествo углов и радиус
+    num_sides = int(input("Введите количество углов многоугольника: "))
+    radius = int(input("Введите радиус многоугольника: "))
+
+    # Генерация вершин правильного многоугольника
+    center = (width // 2, height // 2)
+
+    # Начинаем отсчет времени
+    start_time = time.time()
+    vertices = create_regular_polygon(num_sides, radius, center)
+    polygon_creation_time = time.time() - start_time
+    ###print(f"Время создания многоугольника: {polygon_creation_time:.6f} секунд")
+
+    # Рисуем многоугольник
+    pygame.draw.polygon(screen, (0, 0, 0), vertices)  # Черный цвет для границы
+    pygame.draw.polygon(screen, (255, 255, 255), vertices)  # Белый цвет для внутренней части
+
+    # Заполняем многоугольник
+    start_fill_time = time.time()
+    fill_color = (139, 0, 0)  # Цвет заливки (цвет крови!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
+    boundary_fill(screen, center[0], center[1], fill_color)
+    fill_execution_time = time.time() - start_fill_time
+    print(f"Время заполнения многоугольника: {fill_execution_time:.6f} секунд")
+
+    # Основной цикл
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        pygame.display.flip()
+
+if __name__ == "__main__":
+    main()
+```
+```
+#Common
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import time
+def create_regular_polygon(num_sides, radius):
+    """
+    Создание правильного многоугольника по количеству углов и радиусу.
+    """
+    angle = 2 * np.pi / num_sides  # Угол между вершинами
+    vertices = [(radius * np.cos(i * angle) + 200, radius * np.sin(i * angle) + 200) for i in range(num_sides)]
+    return vertices
+
+def create_polygon_image(vertices, shape=(400, 400)):
+    fig, ax = plt.subplots()
+    fig.set_size_inches(shape[0] / fig.dpi, shape[1] / fig.dpi)
+    ax.set_xlim(0, shape[1])
+    ax.set_ylim(0, shape[0])
+    ax.invert_yaxis()
+    ax.axis('off')
+
+    # Рисуем многоугольник
+    polygon = Polygon(vertices, closed=True, edgecolor='black', facecolor='white')
+    ax.add_patch(polygon)
+
+    # Преобразуем в массив
+    canvas = FigureCanvas(fig)
+    canvas.draw()
+    image = np.frombuffer(canvas.buffer_rgba(), dtype='uint8').reshape(shape[0], shape[1], 4)
+    plt.close(fig)
+
+    return image[:, :, :3].copy()
+
+def is_background(color, threshold=68):
+    # Считаем белыми пиксели с яркостью выше 68
+    return np.mean(color) > threshold
+
+def boundary_fill(image, x, y, fill_color):
+    
+    if not is_background(image[x, y]):
+        return
+
+    stack = [(x, y)]
+
+    while stack:
+        cx, cy = stack.pop()
+        if is_background(image[cx, cy]):
+            image[cx, cy] = fill_color
+
+            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                nx, ny = cx + dx, cy + dy
+                if 0 <= nx < image.shape[0] and 0 <= ny < image.shape[1] and is_background(image[nx, ny]):
+                    stack.append((nx, ny))
+
+# Запрос количества углов и радиуса
+num_sides = int(input("Введите количество углов многоугольника: "))
+radius = int(input("Введите радиус многоугольника: "))
+
+# Генерация вершин правильного многоугольника
+vertices = create_regular_polygon(num_sides, radius)
+
+# Создание изображения многоугольника
+image_shape = (1680, 1920)  # Размер изображения
+image = create_polygon_image(vertices, shape=image_shape)
+
+fill_color = np.array([139, 0, 0], dtype=np.uint8)  # Цвет заливки (цвет крови)
+
+# Убираем темные серые пиксели между границей и заливкой
+gray_threshold = 100
+image[np.all((image[:, :, 0] < gray_threshold) & 
+             (image[:, :, 1] < gray_threshold) & 
+             (image[:, :, 2] < gray_threshold), axis=-1)] = [255, 255, 255]
+
+# Отображаем исходное изображение
+plt.subplot(1, 2, 1)
+plt.title("Исходное изображение")
+plt.imshow(image)
+
+# Применяем Boundary Fill с начальной точкой внутри многоугольника
+start_fill_time = time.time()
+boundary_fill(image, image_shape[0] // 2, image_shape[1] // 2, fill_color)
+fill_execution_time = time.time() - start_fill_time
+print(f"Время заполнения многоугольника: {fill_execution_time:.6f} секунд")
+# Отображаем результат
+plt.subplot(1, 2, 2)
+plt.title("После Boundary Fill")
+plt.imshow(image)
+plt.show()
+```
