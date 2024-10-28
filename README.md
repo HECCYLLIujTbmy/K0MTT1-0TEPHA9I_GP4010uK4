@@ -145,3 +145,110 @@ plt.show()
 ![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/Krug_common300.png)
 
 > Весьма занятно, построение окружности обычной функцией будет занимать 0.22 секунды при **R∈(10, 10000000)**. Брезенхемом потребовалось *10 минут* на обрабатку **R=10000000** 
+
+
+# Реализация алгоритма алгоритма Сезерленда-Коэна
+> Алгоритм  Сазерленда-Коэна используется для отсечения линий прямоугольным окном на плоскости. Идея алгоритма заключается в классификации концов отрезка относительно сторон окна и применении побитовой логики для определения видимых частей отрезка.
+```
+import matplotlib.pyplot as plt
+
+def compute_code(x, y, x_min, x_max, y_min, y_max):
+    code = 0b0000  # Изначально все биты равны 0
+
+    if x < x_min:       # слева от окна
+        code |= 0b0001  # Устанавливает первый бит в 1, если точка слева от окна
+    elif x > x_max:     # справа от окна
+        code |= 0b0010  # Устанавливает второй бит в 1, если точка справа от окна
+    if y < y_min:       # ниже окна
+        code |= 0b0100  # Устанавливает третий бит в 1, если точка ниже окна
+    elif y > y_max:     # выше окна
+        code |= 0b1000  # Устанавливает четвертый бит в 1, если точка выше окна
+
+    return code
+
+
+def cohen_sutherland_clip(x1, y1, x2, y2, x_min, y_min, x_max, y_max):
+    code1 = compute_code(x1, y1, x_min, x_max, y_min, y_max)
+    code2 = compute_code(x2, y2, x_min, x_max, y_min, y_max)
+    accept = False
+    clipped_line = (x1, y1, x2, y2)
+
+    while True:
+        if code1 == 0 and code2 == 0:  # оба конца внутри окна
+            accept = True
+            clipped_line = (x1, y1, x2, y2)
+            break
+        elif (code1 & code2) != 0:     # оба конца вне окна и на одной стороне
+            break
+        else:
+            x, y = 0, 0
+            code_out = code1 if code1 != 0 else code2
+
+            #### поиск пересечения с границей окна
+            if code_out & 8:           # точка выше окна
+                x = x1 + (x2 - x1) * (y_max - y1) / (y2 - y1)
+                y = y_max
+            elif code_out & 4:         # точка ниже окна
+                x = x1 + (x2 - x1) * (y_min - y1) / (y2 - y1)
+                y = y_min
+            elif code_out & 2:         # точка справа от окна
+                y = y1 + (y2 - y1) * (x_max - x1) / (x2 - x1)
+                x = x_max
+            elif code_out & 1:         # точка слева от окна
+                y = y1 + (y2 - y1) * (x_min - x1) / (x2 - x1)
+                x = x_min
+
+            ##### обновляем точку и код
+            if code_out == code1:
+                x1, y1 = x, y
+                code1 = compute_code(x1, y1, x_min, x_max, y_min, y_max)
+            else:
+                x2, y2 = x, y
+                code2 = compute_code(x2, y2, x_min, x_max, y_min, y_max)
+
+    if accept:
+        return (x1, y1, x2, y2)
+    else:
+        return None
+
+def visualize_multiple_lines(x_min, y_min, x_max, y_max, lines):
+    fig, ax = plt.subplots()
+
+
+    window = plt.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min, linewidth=1, edgecolor='blue', facecolor='none')
+    ax.add_patch(window)
+
+ 
+    for i, (x1, y1, x2, y2) in enumerate(lines):
+        ##### ориг отрезок
+        ax.plot([x1, x2], [y1, y2], color='red', linestyle='--', label='Оригинальный отрезок' if i == 0 else "")
+
+
+        clipped_line = cohen_sutherland_clip(x1, y1, x2, y2, x_min, y_min, x_max, y_max)
+        if clipped_line:
+            cx1, cy1, cx2, cy2 = clipped_line
+            ax.plot([cx1, cx2], [cy1, cy2], color='green', label='Обрезанный отрезок' if i == 0 else "")
+
+    ax.set_xlim(x_min - 5, x_max + 5)
+    ax.set_ylim(y_min - 5, y_max + 5)
+    ax.axhline(0, color='black',linewidth=0.5, ls='--')
+    ax.axvline(0, color='black',linewidth=0.5, ls='--')
+    ax.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
+    ax.set_aspect('equal', adjustable='box')
+    ax.legend()
+    plt.title('Алгоритм Сазерленда-Коэна для нескольких отрезков')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.show()
+
+x_min, y_min, x_max, y_max = 1, 1, 5, 5
+lines = [
+    (-5, 5, 15, 5),
+    (-23, -1, 8, 12),
+    (-5, 7, 7, -3),
+    (6, 6, 6, -3)
+]
+visualize_multiple_lines(x_min, y_min, x_max, y_max, lines)
+
+```
+![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/алгорит-%20Сазерленда-Коэна.png)
