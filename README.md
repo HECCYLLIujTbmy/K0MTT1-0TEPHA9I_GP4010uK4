@@ -146,7 +146,80 @@ plt.show()
 
 > Весьма занятно, построение окружности обычной функцией будет занимать 0.22 секунды при **R∈(10, 10000000)**. Брезенхемом потребовалось *10 минут* на обрабатку **R=10000000** 
 
+# Циферблат
+```
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+class CircleDrawer:
+    
+
+    
+    def __init__(self, radius): 
+        self.radius = radius
+        self.points = []
+
+
+    def symmetry(self, x, y):  # Добавляет симметричные точки
+            self.points += [
+                (x, y), (-x, y), (x, -y), (-x, -y),
+                (y, x), (-y, x), (y, -x), (-y, -x)
+            ]
+
+    def raschet(self):  # Рассчитывает координаты точек для построения круга
+        x, y = 0, self.radius
+        d = 3 - 2 * self.radius
+        while x <= y:
+            self.symmetry(x, y)
+            if d <= 0:
+                d += 3 * x + 7
+            else:
+                d += 4 * (x - y) + 10
+                y -= 1
+            x += 1
+        self.points = self.sortirovka(set(self.points))
+
+    
+
+    def sortirovka(self, points):  # Сортирует точки
+        points = sorted(points, key=lambda p: np.arctan2(p[1], p[0]))
+        return list(points) + [list(points)[0]]
+
+    def c4ferblat(self):  # Строит круг с 12 линиями
+        x_coords, y_coords = zip(*self.points)
+        plt.plot(x_coords, y_coords, color='black')
+        
+        # Добавляем 12 линий
+        for i in range(12):
+            angle = 2 * np.pi * i / 12  # Угол для каждой линии
+            start_x = (self.radius * 0.8) * np.cos(angle)  # настройка линий
+            start_y = (self.radius * 0.8) * np.sin(angle)
+            end_x = self.radius * np.cos(angle)  # Конец линии на окружности
+            end_y = self.radius * np.sin(angle)
+            
+            plt.plot([start_x, end_x], [start_y, end_y], color='red', lw=1.5)
+
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.title(f'радиус {self.radius} и 12 линий')
+        plt.grid(True)
+        plt.show()
+
+def main():
+
+        radius = int(input("Введите радиус: "))
+        if radius <= 0:
+            print("Радиус натуральное число.")
+            return
+
+        drawer = CircleDrawer(radius)
+        drawer.raschet()
+        drawer.c4ferblat()
+
+if __name__ == "__main__":
+    main()
+![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/cyfer.png)
+```
 # Реализация алгоритма алгоритма Сезерленда-Коэна
 > Алгоритм  Сазерленда-Коэна используется для отсечения линий прямоугольным окном на плоскости. Идея алгоритма заключается в классификации концов отрезка относительно сторон окна и применении побитовой логики для определения видимых частей отрезка.
 ```
