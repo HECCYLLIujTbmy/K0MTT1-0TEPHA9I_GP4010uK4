@@ -653,3 +653,69 @@ plt.show()
 ```
 ![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/fill.png)
 ![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/FIGASE.png)
+
+# Заполнение сканированием
+```
+import numpy as np
+import matplotlib.pyplot as plt
+
+def scanline_fill(img, seed):
+    """
+    Заполнение замкнутой области посредством горизонтального сканирования.
+
+    :param img: Двумерный массив (изображение)
+    :param seed: Начальная точка (x, y)
+    """
+    stack = [seed]
+    rows, cols = img.shape
+
+    while stack:
+        x, y = stack.pop()
+
+        # Перейти влево, пока не найдем границу
+        left = y
+        while left >= 0 and img[x, left] == 0:
+            left -= 1
+        left += 1
+
+        # Перейти вправо, пока не найдем границу
+        right = y
+        while right < cols and img[x, right] == 0:
+            right += 1
+        right -= 1
+
+        # Закрасить строку от left до right
+        for col in range(left, right + 1):
+            img[x, col] = 1
+
+        # Проверить строки выше и ниже
+        for col in range(left, right + 1):
+            if x > 0 and img[x - 1, col] == 0:  # Строка сверху
+                stack.append((x - 1, col))
+            if x < rows - 1 and img[x + 1, col] == 0:  # Строка снизу
+                stack.append((x + 1, col))
+
+# Размер изображения
+image_size = 20
+img = np.zeros((image_size, image_size))
+
+# Рисуем замкнутую область
+img[5:15, 5] = 1
+img[5:15, 15] = 1
+img[5, 5:20] = 1
+img[15, 5:16] = 1
+
+# Точка внутри замкнутой области
+seed_point = (10, 10)
+
+# Заполняем область
+scanline_fill(img, seed_point)
+
+# Визуализация результата
+plt.imshow(img, cmap='gray', origin='lower')
+plt.title("Scanline Fill")
+plt.show()
+
+```
+
+![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/scanfile.png)
