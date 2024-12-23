@@ -719,3 +719,79 @@ plt.show()
 ```
 
 ![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/scanfile.png)
+
+
+
+
+# Вращение фигуры
+```
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import imageio
+
+# Параметры GIF
+gif_filename = 'rotating_spiral_240fps.gif'
+frames = []
+num_frames = 240  # Количество кадров
+
+# Функция для поворота точки в 3D
+def rotate(point, angle_x, angle_y, angle_z):
+    ax, ay, az = np.radians(angle_x), np.radians(angle_y), np.radians(angle_z)
+    Rx = np.array([[1, 0, 0],
+                   [0, np.cos(ax), -np.sin(ax)],
+                   [0, np.sin(ax), np.cos(ax)]])
+    Ry = np.array([[np.cos(ay), 0, np.sin(ay)],
+                   [0, 1, 0],
+                   [-np.sin(ay), 0, np.cos(ay)]])
+    Rz = np.array([[np.cos(az), -np.sin(az), 0],
+                   [np.sin(az), np.cos(az), 0],
+                   [0, 0, 1]])
+    return Rz @ Ry @ Rx @ point
+
+# Создание спирали
+num_points = 1000
+z = np.linspace(-2, 2, num_points)
+radius = 0.5 * (1 + z)  # Радиус спирали изменяется вдоль оси Z
+x = radius * np.cos(10 * z)  # Угловая частота вращения
+y = radius * np.sin(10 * z)
+points = np.vstack((x, y, z)).T
+
+# Цвета для спирали
+colors = plt.cm.viridis(np.linspace(0, 1, num_points))
+
+# Создание фигуры
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+# Генерация анимации вращения
+for i in range(num_frames):
+    ax.clear()
+    ax.set_xlim([-2, 2])
+    ax.set_ylim([-2, 2])
+    ax.set_zlim([-2, 2])
+    ax.axis('off')
+
+    # Углы поворота
+    angle_x = i * 1.5  # Скорость вращения по X
+    angle_y = i * 0.75  # Скорость вращения по Y
+    angle_z = i * 0.5  # Скорость вращения по Z
+
+    # Поворачиваем точки
+    rotated_points = np.array([rotate(p, angle_x, angle_y, angle_z) for p in points])
+
+    # Отрисовка спирали
+    ax.scatter(rotated_points[:, 0], rotated_points[:, 1], rotated_points[:, 2],
+               c=colors, s=1, alpha=0.8)
+
+    fig.canvas.draw()
+    image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
+    image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+    frames.append(image)
+
+# Сохранение в GIF с 240 fps
+imageio.mimsave(gif_filename, frames, fps=240)
+print(f'GIF сохранен в файл: {gif_filename}')
+
+```
+![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/rotating_spiral_240fps.gif)
