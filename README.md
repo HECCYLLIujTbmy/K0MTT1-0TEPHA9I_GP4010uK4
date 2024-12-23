@@ -795,3 +795,4 @@ print(f'GIF сохранен в файл: {gif_filename}')
 
 ```
 ![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/rotating_spiral_240fps.gif)
+![alt text](https://github.com/HECCYLLIujTbmy/K0MTT1-0TEPHA9I_GP4010uK4/blob/main/rotating_torus_240fps.gif)
